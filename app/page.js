@@ -6,6 +6,10 @@ const page = () => {
       <Link href="/login">
         <button>Login</button>
       </Link>
+
+      <Link href="/signup">
+        <button>Signup</button>
+      </Link>
     </div>
   )
 }
