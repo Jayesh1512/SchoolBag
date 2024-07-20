@@ -1,9 +1,10 @@
+import Link from "next/link";
 import { FcGoogle } from "react-icons/fc";
 import { LuMail } from "react-icons/lu";
 
 const page = () => {
   return (
-    <div className="min-h-screen text-center lg:w-1/5 mx-auto max-sm:w-full w-1/2 relative max-sm:-top-10  overflow-hidden">
+    <div className="bg-background min-h-screen text-center lg:w-1/5 mx-auto max-sm:w-full w-1/2 relative max-sm:-top-10 overflow-hidden">
       <img src="/img/login/main/bag.png" alt="" className="relative" />
       <p className="text-yellow font-medium text-xl py-5">
         All Your Learning, One Place
@@ -20,7 +21,7 @@ const page = () => {
           </button>
           <button className="text-black bg-yellow flex justify-center mt-6 w-full items-center gap-4 py-2 border border-black rounded-lg font-medium text-base">
             <LuMail />
-            <span className="">Signup Using email</span>
+            <Link href='/signup' className="overflow-hidden">Signup Using email</Link>
           </button>
         </div>
       </div>

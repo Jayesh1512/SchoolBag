@@ -8,4 +8,9 @@
 
 body{
   background-color: #191919;
+  /* overflow: hidden; */
+}
+
+.signup{
+  overflow: hidden;
 }
