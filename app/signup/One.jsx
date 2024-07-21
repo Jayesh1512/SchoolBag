@@ -5,7 +5,7 @@ const One = () => {
     <div className="py-4">
       <div className="space-y-4">
         <p className="text-2xl font-medium">Let's create your bag</p>
-        <p className="text-xs font-light">
+        <p className="text-sm font-light">
           Bags are your personal filing cabinets within the app.
           <br /> Organize your files by topic, or any way that works best for
           you. Everything you store in your Bags stays readily accessible on

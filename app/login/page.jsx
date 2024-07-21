@@ -4,7 +4,7 @@ import { LuMail } from "react-icons/lu";
 
 const page = () => {
   return (
-    <div className="bg-background min-h-screen text-center lg:w-1/5 mx-auto max-sm:w-full w-1/2 relative max-sm:-top-10 overflow-hidden">
+    <div className="bg-background max-h-screen text-center lg:w-1/5 mx-auto max-sm:w-full w-1/2 relative max-sm:-top-10 overflow-hidden">
       <img src="/img/login/main/bag.png" alt="" className="relative" />
       <p className="text-yellow font-medium text-xl py-5">
         All Your Learning, One Place

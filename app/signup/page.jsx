@@ -15,7 +15,7 @@ const Page = () => {
       <div className="lg:w-1/5 md:w-1/2 mx-auto text-white ">
         <div className="space-y-4 py-5 px-5">
           <p className="text-3xl">Sign up</p>
-          <div className="grid w-full grid-cols-3 gap-2">
+          <div className="grid w-full grid-cols-2 gap-2">
             <div
               className={`w-full rounded-full ${
                 pageNo >= 1 ? "bg-yellow" : "bg-[#393939]"
@@ -26,11 +26,7 @@ const Page = () => {
                 pageNo >= 2 ? "bg-yellow" : "bg-[#393939]"
               } h-1`}
             ></div>
-            <div
-              className={`w-full rounded-full ${
-                pageNo >= 3 ? "bg-yellow" : "bg-[#393939]"
-              } h-1`}
-            ></div>
+            
           </div>
           <div>{pageNo == 1 && <One />}</div>
         </div>
