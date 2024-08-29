@@ -18,7 +18,7 @@ const Page = () => {
           <div className="grid w-full grid-cols-2 gap-2">
             <div
               className={`w-full rounded-full ${
-                pageNo >= 1 ? "bg-yellow" : "bg-[#393939]"
+                pageNo >= 1 ? "bg-brand-primary-200" : "bg-[#393939]"
               } h-1`}
             ></div>
             <div
@@ -32,7 +32,7 @@ const Page = () => {
         </div>
         <div className="text-center px-5 py-5 lg:w-1/5 md:w-1/2 mx-auto flex flex-col items-center gap-4 text-xl w-full absolute bg-background bottom-0 overflow-hidden">
           <button
-            className="w-full text-black bg-yellow rounded-md font-medium py-1"
+            className="w-full text-black bg-brand-primary-200 rounded-md font-medium py-1"
             onClick={nextpage}
           >
             Next &rarr;
