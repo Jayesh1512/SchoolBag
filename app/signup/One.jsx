@@ -1,29 +1,37 @@
-import { IoInformationCircleOutline } from "react-icons/io5";
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../../constants/firebase'; // Ensure these are correctly imported
+import { getDatabase, ref, set } from 'firebase/database'; // Import functions for Realtime Database
 
-const One = () => {
+const One = ({ onSuccessLogin }) => {
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+
+      console.log("User Info:", user);
+
+      // Save user data to Realtime Database
+      const db = getDatabase();
+      await set(ref(db, 'users/' + user.uid), {
+        uid: user.uid,
+        displayName: user.displayName,
+        email: user.email,
+      });
+
+      onSuccessLogin(); 
+    } catch (error) {
+      console.error("Google Login Error:", error);
+    }
+  };
+
   return (
-    <div className="py-4">
-      <div className="space-y-4">
-        <p className="text-2xl font-medium">Let's create your bag</p>
-        <p className="text-xs font-light">
-          Bags are your personal filing cabinets within the app.
-          <br /> Organize your files by topic, or any way that works best for
-          you. Everything you store in your Bags stays readily accessible on
-          your device, even when you're offline.
-        </p>
-
-        <p className="text-xl">Name your very own bag</p>
-        <input
-          type="text"
-          className="bg-transparent border placeholder:text-xs border-white w-full rounded-md py-1 px-3"
-          placeholder = "Enter School Email"
-        />
-        <div className="w-full bg-[#002241] flex gap-1 p-2 rounded-lg items-center justify-evenly">
-          <IoInformationCircleOutline className="text-[#1D90FA] text-4xl" />
-          <p className="text-[#1D90FA] text-xs p-1">
-            The bag name will be displayed alongside files when you share them.
-          </p>
-        </div>
+    <div className='grid'>
+      <div
+        className="flex mt-[25vh] justify-center gap-2 font-medium text-lg p-2 border border-white rounded-lg cursor-pointer transition-all duration-300 hover:bg-white hover:text-black transform hover:scale-105"
+        onClick={handleGoogleLogin}
+      >
+        <img src="/img/login/main/google.svg" className="h-6" alt="Google Logo" />
+        <p>Sign in using Google</p>
       </div>
     </div>
   );
