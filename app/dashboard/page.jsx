@@ -8,73 +8,6 @@ import { useEffect, useState } from "react";
 import { getDatabase, ref, onValue, set } from "firebase/database";
 import Link from "next/link";
 
-// Function to add a folder to Firebase under the user's directory
-const addFolderToFirebase = async (folderName, user) => {
-    const db = getDatabase();
-    const folderId = new Date().getTime().toString(); // Use timestamp as folder ID for uniqueness
-    const folderRef = ref(db, `folders/${user.uid}/${folderId}`); // Save the folder under user's UID with a unique ID
-
-    await set(folderRef, {
-        name: folderName,
-        userId: user.uid,
-        email: user.email,
-        createdAt: new Date().toISOString(),
-    });
-};
-
-// Function to fetch user details from Firebase
-const fetchUserDetails = (userId) => {
-    const db = getDatabase();
-    const userRef = ref(db, `users/${userId}`);
-
-    return new Promise((resolve, reject) => {
-        onValue(userRef, (snapshot) => {
-            const userData = snapshot.val();
-            if (userData) {
-                resolve(userData); // Return user data
-            } else {
-                reject("User not found");
-            }
-        }, (error) => {
-            reject(error);
-        });
-    });
-};
-
-// Function to fetch folders from Firebase for a specific user
-const fetchFoldersAndUsers = async (userId, setFolders) => {
-    const db = getDatabase();
-    const foldersRef = ref(db, `folders/${userId}`);
-
-    onValue(foldersRef, async (snapshot) => {
-        const foldersData = snapshot.val();
-        console.log("Fetched folders data:", foldersData); // Log fetched data
-
-        if (foldersData) {
-            const userFolders = await Promise.all(
-                Object.entries(foldersData).map(async ([folderId, folder]) => {
-                    console.log("Folder:", folder); // Log individual folder
-                    const userDetails = await fetchUserDetails(folder.userId);
-                    return {
-                        id: folderId,
-                        name: folder.name || "Unnamed Folder",
-                        email: userDetails.email,
-                        displayName: userDetails.displayName || "Unknown",
-                        createdAt: folder.createdAt,
-                    };
-                })
-            );
-
-            setFolders(userFolders);
-        } else {
-            console.log("No folders found for user:", userId);
-            setFolders([]);
-        }
-    }, (error) => {
-        console.error("Error fetching folders:", error);
-    });
-};
-
 export default function Home() {
     const [user, loading] = useAuthState(auth);
     const router = useRouter();
@@ -85,7 +18,7 @@ export default function Home() {
         if (!user && !loading) {
             router.push("/login");
         } else if (user) {
-            fetchFoldersAndUsers(user.uid, setFolders); // Fetch folders and user details
+            fetchFoldersAndUsers(user.uid, setFolders);
         }
     }, [user, loading, router]);
 
@@ -100,6 +33,73 @@ export default function Home() {
     // Toggle popup visibility
     const togglePopup = () => {
         setIsPopupOpen(!isPopupOpen);
+    };
+
+    // Function to add a folder to Firebase under the user's directory
+    const addFolderToFirebase = async (folderName, user) => {
+        const db = getDatabase();
+        const folderId = new Date().getTime().toString(); // Use timestamp as folder ID for uniqueness
+        const folderRef = ref(db, `folders/${user.uid}/${folderId}`); // Save the folder under user's UID with a unique ID
+
+        await set(folderRef, {
+            name: folderName,
+            userId: user.uid,
+            email: user.email,
+            createdAt: new Date().toISOString(),
+        });
+    };
+
+    // Function to fetch user details from Firebase
+    const fetchUserDetails = (userId) => {
+        const db = getDatabase();
+        const userRef = ref(db, `users/${userId}`);
+
+        return new Promise((resolve, reject) => {
+            onValue(userRef, (snapshot) => {
+                const userData = snapshot.val();
+                if (userData) {
+                    resolve(userData); // Return user data
+                } else {
+                    reject("User not found");
+                }
+            }, (error) => {
+                reject(error);
+            });
+        });
+    };
+
+    // Function to fetch folders from Firebase for a specific user
+    const fetchFoldersAndUsers = async (userId, setFolders) => {
+        const db = getDatabase();
+        const foldersRef = ref(db, `folders/${userId}`);
+
+        onValue(foldersRef, async (snapshot) => {
+            const foldersData = snapshot.val();
+            console.log("Fetched folders data:", foldersData); // Log fetched data
+
+            if (foldersData) {
+                const userFolders = await Promise.all(
+                    Object.entries(foldersData).map(async ([folderId, folder]) => {
+                        console.log("Folder:", folder); // Log individual folder
+                        const userDetails = await fetchUserDetails(folder.userId);
+                        return {
+                            id: folderId,
+                            name: folder.name || "Unnamed Folder",
+                            email: userDetails.email,
+                            displayName: userDetails.displayName || "Unknown",
+                            createdAt: folder.createdAt,
+                        };
+                    })
+                );
+
+                setFolders(userFolders);
+            } else {
+                console.log("No folders found for user:", userId);
+                setFolders([]);
+            }
+        }, (error) => {
+            console.error("Error fetching folders:", error);
+        });
     };
 
     return (

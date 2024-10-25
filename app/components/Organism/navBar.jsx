@@ -35,7 +35,7 @@ export default function Navbar() {
                 src={currentPath === "/share" ? ShareSelected : ShareUnselected}
                 alt="Share"
               />
-              <p className="caption-1 text-white">Share</p>
+              <p className="caption-1 text-white">Shared</p>
             </li>
           </Link>
           <Link href="/starred">

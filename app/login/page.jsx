@@ -7,8 +7,6 @@ import Link from "next/link";
 export default function Login() {
   const [error, setError] = useState(null);
   const router = useRouter();
-
-  // Handle Google Login
   const handleGoogleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
@@ -32,7 +30,7 @@ export default function Login() {
         <div className="space-y-5 mt-5 px-7">
           {/* Google Login */}
           <div
-            className="flex justify-center gap-2 font-medium text-lg p-2 border border-white rounded-lg cursor-pointer transition-all duration-300 hover:bg-white hover:text-black transform hover:scale-105"
+            className="flex justify-center gap-2 font-medium text-lg p-2 border hover:border-brand-primary-500 rounded-lg cursor-pointer transition-all duration-300 hover:bg-brand-primary-300 hover:text-black transform hover:scale-105"
             onClick={handleGoogleLogin} // Trigger Google login on click
           >
             <img src="/img/login/main/google.svg" className="h-6" alt="" />
