@@ -16,7 +16,10 @@ export default function SubjectPage() {
     const [user, setUser] = useState(null);
     const [showMenu, setShowMenu] = useState(false);
     const [folderId, setFolderId] = useState(null);
-    const [fileOptions, setFileOptions] = useState(null); // State to manage file options visibility
+    const [fileOptions, setFileOptions] = useState(null);
+    const [shareEmail, setShareEmail] = useState('');
+    const [showShareModal, setShowShareModal] = useState(false);
+    const [selectedFileId, setSelectedFileId] = useState(null);
     const router = useRouter();
     const db = getDatabase();
     const storage = getStorage();
@@ -51,30 +54,24 @@ export default function SubjectPage() {
                             setFolderId(folderId);
 
                             if (filesData) {
-                                Object.entries(filesData).forEach(([fileId, file]) => {
+                                const filePromises = Object.entries(filesData).map(([fileId, file]) => {
                                     const fileStorageRef = storageRef(storage, `files/${file.name}`);
-                                    getDownloadURL(fileStorageRef).then((url) => {
+                                    return getDownloadURL(fileStorageRef).then((url) => {
                                         const fileFormat = file.name.split('.').pop();
-                                        filesList.push({
+                                        return {
                                             id: fileId,
                                             name: file.name,
                                             uploadedAt: file.uploadedAt,
                                             url,
                                             format: fileFormat,
-                                        });
-                                        setFiles((prevFiles) => [
-                                            ...prevFiles,
-                                            {
-                                                id: fileId,
-                                                name: file.name,
-                                                uploadedAt: file.uploadedAt,
-                                                url,
-                                                format: fileFormat,
-                                            },
-                                        ]);
-                                    }).catch((error) => {
-                                        console.error("Error getting download URL:", error);
+                                        };
                                     });
+                                });
+
+                                Promise.all(filePromises).then(fetchedFiles => {
+                                    setFiles(fetchedFiles);
+                                }).catch(error => {
+                                    console.error("Error getting download URLs:", error);
                                 });
                             }
                         }
@@ -94,7 +91,6 @@ export default function SubjectPage() {
             await update(folderRef, { name: newName });
             setShowMenu(false);
             router.push('/dashboard');
-            router.refresh();
         }
     };
 
@@ -107,14 +103,43 @@ export default function SubjectPage() {
         }
     };
 
-    // Function to delete a specific file
     const deleteFile = async (fileId) => {
         if (folderId) {
             const fileRef = ref(db, `folders/${user.uid}/${folderId}/files/${fileId}`);
             await remove(fileRef);
-            setFiles(files.filter(file => file.id !== fileId)); // Remove the file from state
-            setFileOptions(null); // Close options menu
+            setFiles(prevFiles => prevFiles.filter(file => file.id !== fileId));
+            setFileOptions(null);
         }
+    };
+
+    const shareFile = async (fileId) => {
+        if (folderId && shareEmail) {
+            // Sanitize email by replacing "." with ","
+            const sanitizedEmail = shareEmail.replace(/\./g, ',');
+            const fileRef = ref(db, `folders/${user.uid}/${folderId}/files/${fileId}/sharedWith`);
+            
+            try {
+                // Update the database with sanitized email
+                await update(fileRef, { [sanitizedEmail]: true });
+                
+                setShowShareModal(false);
+                setShareEmail('');
+                alert('File shared successfully!');
+            } catch (error) {
+                console.error("Error sharing file:", error);
+            }
+        } else {
+            console.error("folderId or shareEmail is missing");
+        }
+    };
+
+    const handleFileOptionsToggle = (fileId) => {
+        setFileOptions(fileId === fileOptions ? null : fileId);
+    };
+
+    const handleShareModalOpen = (fileId) => {
+        setSelectedFileId(fileId);
+        setShowShareModal(true);
     };
 
     return (
@@ -152,7 +177,6 @@ export default function SubjectPage() {
                     Welcome to the {subject} page! Here you can find resources, study materials, and much more related to {subject}.
                 </p>
 
-                {/* Displaying the list of files */}
                 <div className="mt-8">
                     <h2 className="text-2xl font-semibold">Files</h2>
                     <ul className="list-disc mt-4 space-y-2">
@@ -179,21 +203,21 @@ export default function SubjectPage() {
                                     <div className="relative">
                                         <HiOutlineDotsVertical
                                             className='cursor-pointer text-white duration-300 hover:text-base-100'
-                                            onClick={() => setFileOptions(file.id === fileOptions ? null : file.id)}
+                                            onClick={() => handleFileOptionsToggle(file.id)}
                                         />
                                         {fileOptions === file.id && (
                                             <div className="absolute right-0 bg-white shadow-md rounded mt-2 w-32">
-                                                <button
-                                                    onClick={() => navigator.clipboard.writeText(file.url)}
-                                                    className="block px-4 py-2 w-full text-left text-base-500 hover:bg-gray-200"
-                                                >
-                                                    Share
-                                                </button>
                                                 <button
                                                     onClick={() => deleteFile(file.id)}
                                                     className="block px-4 py-2 w-full text-left text-red-600 hover:bg-gray-200"
                                                 >
                                                     Delete File
+                                                </button>
+                                                <button
+                                                    onClick={() => handleShareModalOpen(file.id)}
+                                                    className="block px-4 py-2 w-full text-left text-blue-600 hover:bg-gray-200"
+                                                >
+                                                    Share via Email
                                                 </button>
                                             </div>
                                         )}
@@ -205,13 +229,34 @@ export default function SubjectPage() {
                         )}
                     </ul>
                 </div>
-
-                {/* Go Back Button */}
-                <div className="mt-6">
-                    <Link href="/dashboard" className="text-blue-500 hover:underline">
-                        ← Back to Home
-                    </Link>
-                </div>
+                {showShareModal && (
+                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-10">
+                        <div className="bg-white p-4 rounded-md shadow-lg">
+                            <h2 className="text-xl text-black font-semibold">Share File</h2>
+                            <input
+                                type="email"
+                                placeholder="Enter email to share"
+                                value={shareEmail}
+                                onChange={(e) => setShareEmail(e.target.value)}
+                                className="mt-4 p-2 border text-black border-gray-300 rounded-md w-full"
+                            />
+                            <div className="flex justify-end mt-4">
+                                <button
+                                    onClick={() => setShowShareModal(false)}
+                                    className="mr-4 px-4 py-2 bg-gray-300 rounded-md"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => shareFile(selectedFileId)}
+                                    className="px-4 py-2 bg-blue-500 text-white rounded-md"
+                                >
+                                    Share
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

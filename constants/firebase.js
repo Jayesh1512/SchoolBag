@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getStorage } from "firebase/storage";
-
+import { getDatabase } from "firebase/database"; // Import Realtime Database
 
 const firebaseConfig = {
   apiKey: "AIzaSyChyWnOcX4ocbPZG3zyJ7vlZtQvzSQseRE",
@@ -16,6 +16,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
-const storage = getStorage(app); 
+const storage = getStorage(app);
+const db = getDatabase(app); // Initialize Realtime Database
 
-export { auth, googleProvider,storage, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword };
+export { auth, googleProvider, storage, db, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword };

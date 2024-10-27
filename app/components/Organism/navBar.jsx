@@ -44,18 +44,10 @@ export default function Navbar() {
                 src={currentPath === "/starred" ? StarSelected : StarUnselected}
                 alt="Star"
               />
-              <p className="caption-1 text-white">Star</p>
+              <p className="caption-1 text-white">TalkToAI</p>
             </li>
           </Link>
-          <Link href="/people">
-            <li className="flex justify-center items-center flex-col">
-              <Image
-                src={currentPath === "/people" ? PeopleSelected : PeopleUnselected}
-                alt="People"
-              />
-              <p className="caption-1 text-white">People</p>
-            </li>
-          </Link>
+          
         </ul>
       </nav>
     </>

@@ -18,7 +18,7 @@ export default function Home() {
         if (!user && !loading) {
             router.push("/login");
         } else if (user) {
-            fetchFoldersAndUsers(user.uid, setFolders);
+            fetchFolders(user.uid);
         }
     }, [user, loading, router]);
 
@@ -36,11 +36,10 @@ export default function Home() {
     };
 
     // Function to add a folder to Firebase under the user's directory
-    const addFolderToFirebase = async (folderName, user) => {
+    const addFolderToFirebase = async (folderName) => {
         const db = getDatabase();
-        const folderId = new Date().getTime().toString(); // Use timestamp as folder ID for uniqueness
+        const folderId = new Date().getTime().toString(); // Unique folder ID
         const folderRef = ref(db, `folders/${user.uid}/${folderId}`); // Save the folder under user's UID with a unique ID
-
         await set(folderRef, {
             name: folderName,
             userId: user.uid,
@@ -49,56 +48,21 @@ export default function Home() {
         });
     };
 
-    // Function to fetch user details from Firebase
-    const fetchUserDetails = (userId) => {
-        const db = getDatabase();
-        const userRef = ref(db, `users/${userId}`);
-
-        return new Promise((resolve, reject) => {
-            onValue(userRef, (snapshot) => {
-                const userData = snapshot.val();
-                if (userData) {
-                    resolve(userData); // Return user data
-                } else {
-                    reject("User not found");
-                }
-            }, (error) => {
-                reject(error);
-            });
-        });
-    };
-
-    // Function to fetch folders from Firebase for a specific user
-    const fetchFoldersAndUsers = async (userId, setFolders) => {
+    // Function to fetch folders from Firebase for the authenticated user
+    const fetchFolders = (userId) => {
         const db = getDatabase();
         const foldersRef = ref(db, `folders/${userId}`);
-
-        onValue(foldersRef, async (snapshot) => {
+        
+        onValue(foldersRef, (snapshot) => {
             const foldersData = snapshot.val();
-            console.log("Fetched folders data:", foldersData); // Log fetched data
-
-            if (foldersData) {
-                const userFolders = await Promise.all(
-                    Object.entries(foldersData).map(async ([folderId, folder]) => {
-                        console.log("Folder:", folder); // Log individual folder
-                        const userDetails = await fetchUserDetails(folder.userId);
-                        return {
-                            id: folderId,
-                            name: folder.name || "Unnamed Folder",
-                            email: userDetails.email,
-                            displayName: userDetails.displayName || "Unknown",
-                            createdAt: folder.createdAt,
-                        };
-                    })
-                );
-
-                setFolders(userFolders);
-            } else {
-                console.log("No folders found for user:", userId);
-                setFolders([]);
-            }
-        }, (error) => {
-            console.error("Error fetching folders:", error);
+            const userFolders = foldersData
+                ? Object.entries(foldersData).map(([id, folder]) => ({
+                      id,
+                      name: folder.name || "Unnamed Folder",
+                      createdAt: folder.createdAt,
+                  }))
+                : [];
+            setFolders(userFolders);
         });
     };
 
@@ -119,11 +83,15 @@ export default function Home() {
                 <div className="mt-5 flex-1 relative overflow-y-auto px-4 space-y-4 custom-scrollbar">
                     <div className="grid grid-cols-2 gap-4">
                         {/* Render folders dynamically */}
-                        {folders.map(folder => (
-                            <Link href={`/subjects/${folder.name}`} key={folder.id} className=" text-white text-center h-32 grid place-content-center rounded-md p-4 bg-base-400 shadow hover:bg-base-300 duration-300">
-                                <h3 className="text-lg font-semibold">{folder.name ? folder.name : "Unnamed Folder"}</h3>
-                            </Link>
-                        ))}
+                        {folders.length > 0 ? (
+                            folders.map(folder => (
+                                <Link href={`/subjects/${folder.name}`} key={folder.id} className="text-white text-center h-32 grid place-content-center rounded-md p-4 bg-base-400 shadow hover:bg-base-300 duration-300">
+                                    <h3 className="text-lg font-semibold">{folder.name}</h3>
+                                </Link>
+                            ))
+                        ) : (
+                            <div>No folders found.</div>
+                        )}
                     </div>
                 </div>
 
@@ -136,7 +104,7 @@ export default function Home() {
             <div className="absolute bottom-28 ml-48 z-10">
                 <button
                     className="flex gap-3 items-center bg-white rounded-md duration-300 hover:bg-base-100 hover:text-white text-base-500 font-semibold px-4 py-2"
-                    onClick={togglePopup} // Toggle popup on button click
+                    onClick={togglePopup}
                 >
                     <span className="text-2xl">+</span>
                     <span>Add</span>
@@ -160,7 +128,7 @@ export default function Home() {
                             onClick={() => {
                                 const folderName = prompt("Enter the folder name:");
                                 if (folderName && folderName.trim()) {
-                                    addFolderToFirebase(folderName.trim(), user); // Call the function to add folder to Firebase
+                                    addFolderToFirebase(folderName.trim());
                                 }
                             }}
                         >
@@ -168,10 +136,9 @@ export default function Home() {
                             <p className="w-full">Add Folder</p>
                         </button>
 
-                        {/* Link to File Upload Page */}
                         <button
                             className="flex flex-col justify-between items-center duration-300 hover:bg-base-300 py-4 px-2 rounded-md"
-                            onClick={() => router.push('/subjects/upload')} // Navigate to the new page
+                            onClick={() => router.push('/subjects/upload')}
                         >
                             <img src='/icons/add_notes.svg' alt="" className="p-4" />
                             <p className="w-full">Add File</p>
