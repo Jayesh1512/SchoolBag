@@ -49,7 +49,7 @@ export default function SubjectPage() {
 
                 if (foldersData) {
                     Object.entries(foldersData).forEach(([folderId, folder]) => {
-                        if (folder.name.toLowerCase() === normalizedSubject.toLowerCase()) {
+                        if (folder.name?.toLowerCase() === normalizedSubject.toLowerCase()) {
                             const filesData = folder.files;
                             setFolderId(folderId);
 
@@ -114,24 +114,50 @@ export default function SubjectPage() {
 
     const shareFile = async (fileId) => {
         if (folderId && shareEmail) {
-            // Sanitize email by replacing "." with ","
             const sanitizedEmail = shareEmail.replace(/\./g, ',');
             const fileRef = ref(db, `folders/${user.uid}/${folderId}/files/${fileId}/sharedWith`);
             
             try {
-                // Update the database with sanitized email
+                // Update database with the shared file
                 await update(fileRef, { [sanitizedEmail]: true });
-                
+    
+                // Call your send email API
+                const response = await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: shareEmail,
+                        fileName: files.find(file => file.id === fileId)?.name,
+                        subjectName: subject,
+                        senderEmail: user.email,  // Sender's email from authentication
+                        senderName: user.displayName || user.email,  // Sender's name or email if displayName is not available
+                    }),
+                });
+    
+                const data = await response.json();
+    
+                if (data.success) {
+                    alert('File shared and notification sent!');
+                } else {
+                    console.error('Error sending notification email:', data.error);
+                    alert('Error sending notification email');
+                }
+    
                 setShowShareModal(false);
                 setShareEmail('');
-                alert('File shared successfully!');
             } catch (error) {
                 console.error("Error sharing file:", error);
+                alert('Error sharing file or sending email');
             }
         } else {
             console.error("folderId or shareEmail is missing");
         }
     };
+    
+    
+    
 
     const handleFileOptionsToggle = (fileId) => {
         setFileOptions(fileId === fileOptions ? null : fileId);
